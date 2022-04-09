@@ -1,55 +1,66 @@
-const config = require('dotenv').config();
-
 const jwt = require('jsonwebtoken');
+const md5 = require('md5');
 
-const {User} = require('../database/models');
+const User = require('../database/models/User');
 
-// Errors
-const signupErrors = {
-    EMAIL_ALREADY_EXIST: "Email already exist!",
-}
+const SAVE_USER_SUCCESS = 'SAVE_USER_SUCCESS';
+const SAVE_USER_ERROR = 'SAVE_USER_ERROR';
 
-const signinErrors = {
-    USER_NOT_FOUND: "User not found!",
-}
+const FIND_USER_ERROR = 'FIND_USER_ERROR';
+const SINGIN_SUCCESS = 'SINGIN_SUCCESS';
 
-class AuthService {
-    // Registrate User
-    static async signup({login, email, password}) {
-        const user = User.build({login, email, password});
-        console.log(user)
+const SECRET_KEY = '234luereiupfg2379w09ch0283g';
 
-        try {
-            await user.save();
-        } catch (error) {
-            const errorCode = error.original.code;
 
-            // Catch Email Exist
-            if (errorCode == "ER_DUP_ENTRY") {
-                throw Error(signupErrors.EMAIL_ALREADY_EXIST);
-            }
+const singUp = async (req, res) => {
+    const {login, email, password} = req.body;
+    
+    const newUser = User.build({login, email, password: md5(password)});
 
-            // Throw error to Controller
-            throw error;
-        }
+    console.log(newUser);
+
+    try {
+        await newUser.save();
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message: SAVE_USER_ERROR});
     }
 
-    // Login User
-    static async signin({login, email, password}) {
-        const user = await User.findOne({
-            where: {login, email, password}
+    return res.status(200).json({message: SAVE_USER_SUCCESS});
+}
+
+const singIn = async (req, res) => {
+    const {email, password} = req.body;
+    
+    console.log(md5(password));
+
+    let user;
+    try {
+        user = await User.findOne({
+            where: { email: email, password: md5(password) }
         });
-
-        if (!user) {
-            throw Error(signinErrors.USER_NOT_FOUND);
-        }
-
-        const payload = {email: user.email, id: user.id};
-        const secretKey = process.env.SECRET_KEY;
-        const token = jwt.sign(payload, secretKey, {expiresIn: "2 days"});
-
-        return token;
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message: FIND_USER_ERROR})
     }
+
+
+    if (!user) {
+        return res.status(400).json({message: FIND_USER_ERROR})
+    }
+
+    const payload = {
+        user
+    }
+
+    const token = jwt.sign(payload, SECRET_KEY, {expiresIn: '2d'});
+
+    console.log(jwt.decode(token));
+
+    return res.status(200).json({token});
 }
 
-module.exports = AuthService;
+module.exports = {
+    singUp,
+    singIn
+}
