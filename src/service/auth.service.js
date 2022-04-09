@@ -23,7 +23,7 @@ const singUp = async (req, res) => {
         await newUser.save();
     } catch (error) {
         console.error(error);
-        return res.status(500).json({message: SAVE_USER_ERROR});
+        return res.status(400).json({message: SAVE_USER_ERROR});
     }
 
     return res.status(200).json({message: SAVE_USER_SUCCESS});
@@ -41,7 +41,7 @@ const singIn = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({message: FIND_USER_ERROR})
+        return res.status(400).json({message: FIND_USER_ERROR})
     }
 
 

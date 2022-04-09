@@ -4,13 +4,13 @@ const db = require('../db');
 class Post extends Model {}
 
 Post.init({
-    name: DataTypes.STRING,
+    title: DataTypes.STRING,
     description: DataTypes.STRING,
     date: DataTypes.DATE,
     phone: DataTypes.STRING,
     address: DataTypes.STRING
 }, 
-    { sequelize: db, modelName: 'Post'}
+    { sequelize: db, modelName: 'Post', paranoid: true}
 );
 
 module.exports = Post;

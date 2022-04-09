@@ -8,7 +8,7 @@ User.init({
     email: DataTypes.STRING,
     password: DataTypes.STRING
 }, 
-    { sequelize: db, modelName: 'User' }
+    { sequelize: db, modelName: 'User', paranoid: true}
 );
 
 module.exports = User;
